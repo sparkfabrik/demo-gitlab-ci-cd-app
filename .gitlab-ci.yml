@@ -1,0 +1,55 @@
+image: alpine/helm:3.2.3
+
+stages:
+ - build
+ - qa
+ - deploy
+
+variables:
+  CI_REGISTRY_IMAGE_REGISTRY: eu.gcr.io
+  CI_REGISTRY_IMAGE_NAME: deltatre-demo-webinar-cicd/nginx
+  CI_REGISTRY_IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+
+create image:
+  stage: build
+  image:
+    # Use debug image because we need a shell (ref. Gitlab docs)
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    # Don't use /tmp because multistage builds will destroy FS across stages
+    - mkdir -p /kaniko/.gcr; echo $sa | base64 -d > /kaniko/.gcr/sa.json
+    - export GOOGLE_APPLICATION_CREDENTIALS=/kaniko/.gcr/sa.json
+    - echo $GOOGLE_APPLICATION_CREDENTIALS
+    - /kaniko/executor --context ${CI_PROJECT_DIR} --dockerfile ${CI_PROJECT_DIR}/Dockerfile --destination ${CI_REGISTRY_IMAGE_REGISTRY}/${CI_REGISTRY_IMAGE_NAME}:${CI_REGISTRY_IMAGE_TAG}
+
+app install:
+  stage: deploy
+  environment:
+     name: app
+  script:
+    - helm repo add bitnami https://charts.bitnami.com/bitnami 
+    - helm upgrade --install nginx bitnami/nginx
+      --set image.registry=${CI_REGISTRY_IMAGE_REGISTRY} 
+      --set image.repository=${CI_REGISTRY_IMAGE_NAME}
+      --set image.tag=${CI_REGISTRY_IMAGE_TAG}
+      --wait
+  only:
+    - master
+  when: always
+
+app-copy install:
+  stage: deploy
+  environment:
+     name: app-copy
+  script:
+    - helm repo add bitnami https://charts.bitnami.com/bitnami 
+    - helm upgrade --install nginx bitnami/nginx
+      --set image.registry=${CI_REGISTRY_IMAGE_REGISTRY} 
+      --set image.repository=${CI_REGISTRY_IMAGE_NAME}
+      --set image.tag=${CI_REGISTRY_IMAGE_TAG}
+      --wait
+  only:
+    - master
+  when: manual
+ 
