@@ -30,6 +30,7 @@ app install:
   script:
     - helm repo add bitnami https://charts.bitnami.com/bitnami 
     - helm upgrade --install nginx bitnami/nginx
+      -f ${CI_PROJECT_DIR}/config/helm/nginx.values.${CI_COMMIT_REF_NAME}.yml
       --set image.registry=${CI_REGISTRY_IMAGE_REGISTRY} 
       --set image.repository=${CI_REGISTRY_IMAGE_NAME}
       --set image.tag=${CI_REGISTRY_IMAGE_TAG}
