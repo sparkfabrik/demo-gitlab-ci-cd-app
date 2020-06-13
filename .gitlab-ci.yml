@@ -23,6 +23,14 @@ create image:
     - echo $GOOGLE_APPLICATION_CREDENTIALS
     - /kaniko/executor --context ${CI_PROJECT_DIR} --dockerfile ${CI_PROJECT_DIR}/Dockerfile --destination ${CI_REGISTRY_IMAGE_REGISTRY}/${CI_REGISTRY_IMAGE_NAME}:${CI_REGISTRY_IMAGE_TAG}
 
+check markup:
+  stage: qa
+  image:
+    name: tmknom/markdownlint
+    entrypoint: ["sh"]
+  script:
+    - markdownlint ${CI_PROJECT_DIR}/content
+
 app install:
   stage: deploy
   environment:
@@ -35,9 +43,10 @@ app install:
       --set image.repository=${CI_REGISTRY_IMAGE_NAME}
       --set image.tag=${CI_REGISTRY_IMAGE_TAG}
       --wait
+      --debug
   only:
     - master
-  when: always
+  when: on_success
 
 app-copy install:
   stage: deploy
