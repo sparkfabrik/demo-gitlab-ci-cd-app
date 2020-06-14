@@ -21,7 +21,10 @@ create image:
     - mkdir -p /kaniko/.gcr; echo $sa | base64 -d > /kaniko/.gcr/sa.json
     - export GOOGLE_APPLICATION_CREDENTIALS=/kaniko/.gcr/sa.json
     - echo $GOOGLE_APPLICATION_CREDENTIALS
-    - /kaniko/executor --context ${CI_PROJECT_DIR} --dockerfile ${CI_PROJECT_DIR}/Dockerfile --destination ${CI_REGISTRY_IMAGE_REGISTRY}/${CI_REGISTRY_IMAGE_NAME}:${CI_REGISTRY_IMAGE_TAG}
+    - /kaniko/executor
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/Dockerfile
+      --destination ${CI_REGISTRY_IMAGE_REGISTRY}/${CI_REGISTRY_IMAGE_NAME}:${CI_REGISTRY_IMAGE_TAG}
 
 check markup:
   stage: qa
